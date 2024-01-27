@@ -62,7 +62,7 @@
 "link" = "管理"
 
 [pages.login]
-"title" = "登录"
+"title" = "欢迎"
 "loginAgain" = "登录时效已过，请重新登录"
 
 [pages.login.toasts]
@@ -134,7 +134,7 @@
 "destinationPort" = "目标端口"
 "targetAddress" = "目标地址"
 "monitorDesc" = "默认留空即可"
-"meansNoLimit" = "表示不限制"
+"meansNoLimit" = " = 无限制（单位：GB)"
 "totalFlow" = "总流量"
 "leaveBlankToNeverExpire" = "留空则永不到期"
 "noRecommendKeepDefault" = "没有特殊需求保持默认即可"
@@ -178,7 +178,7 @@
 "info" = "信息"
 "same" = "相同"
 "inboundData" = "入站数据"
-"copyToClipboard" = "复制到剪贴板"
+"exportInbound" = "出口 入境"
 "import"="导入"
 "importInbound" = "导入入站"
 
@@ -195,26 +195,27 @@
 "prefix" = "前缀"
 "postfix" = "后缀"
 "delayedStart" = "首次使用后开始"
-"expireDays" = "过期天数"
+"expireDays" = "期间"
 "days" = "天"
 "renew" = "自动续订"
-"renewDesc" = "过期后自动续订。0 = 禁用"
+"renewDesc" = "到期后自动续订。(0 = 禁用)(单元: 天)"
 
 [pages.inbounds.toasts]
 "obtain" = "获取"
 
 [pages.inbounds.stream.general]
-"requestHeader" = "请求头"
-"name" = "名称"
-"value" = "值"
+"request" = "要求"
+"response" = "回复"
+"name" = "姓名"
+"value" = "价值"
 
 [pages.inbounds.stream.tcp]
-"requestVersion" = "请求版本"
-"requestMethod" = "请求方法"
-"requestPath" = "请求路径"
-"responseVersion" = "响应版本"
-"responseStatus" = "响应状态"
-"responseStatusDescription" = "响应状态说明"
+"version" = "版本"
+"method" = "方法"
+"path" = "小路"
+"status" = "地位"
+"statusDescription" = "状态说明"
+"requestHeader" = "请求头"
 "responseHeader" = "响应头"
 
 [pages.inbounds.stream.quic]
@@ -247,6 +248,7 @@
 "pageSizeDesc" = "定义入站表的页面大小。设置 0 表示禁用"
 "remarkModel" = "备注模型和分隔符"
 "datepicker" = "日期选择器"
+"datepickerPlaceholder" = "选择日期"
 "datepickerDescription" = "选择器日历类型指定到期日期"
 "sampleRemark" = "备注示例"
 "oldUsername" = "原用户名"
@@ -420,6 +422,14 @@
 "portal" = "门户"
 "intercon" = "互连"
 
+[pages.xray.wireguard]
+"secretKey" = "密钥"
+"publicKey" = "公钥"
+"allowedIPs" = "允许的 IP"
+"endpoint" = "终点"
+"psk" = "共享密钥"
+"domainStrategy" = "域策略"
+
 [pages.settings.security]
 "admin" = "管理员"
 "secret" = "密钥"
@@ -494,7 +504,7 @@
 "port" = "🔌 端口：{{ .Port }}\r\n"
 "expire" = "📅 过期日期：{{ .Time }}\r\n"
 "expireIn" = "📅 剩余时间：{{ .Time }}\r\n"
-"active" = "💡 激活：✅\r\n"
+"active" = "💡 激活：{{ .Enable }}\r\n"
 "enabled" = "🚨 已启用：{{ .Enable }}\r\n"
 "online" = "🌐 连接状态：{{ .Status }}\r\n"
 "email" = "📧 邮箱：{{ .Email }}\r\n"

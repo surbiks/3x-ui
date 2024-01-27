@@ -1,6 +1,6 @@
 "username" = "Nombre de Usuario"
 "password" = "Contraseña"
-"login" = "Acceso"
+"login" = "Acceder"
 "confirm" = "Confirmar"
 "cancel" = "Cancelar"
 "close" = "Cerrar"
@@ -59,10 +59,10 @@
 "settings" = "Configuraciones"
 "xray" = "Configuración Xray"
 "logout" = "Cerrar Sesión"
-"link" = "Otro"
+"link" = "Gestionar"
 
 [pages.login]
-"title" = "Iniciar Sesión"
+"title" = "Bienvenido"
 "loginAgain" = "El límite de tiempo de inicio de sesión ha expirado. Por favor, inicia sesión nuevamente."
 
 [pages.login.toasts]
@@ -134,7 +134,7 @@
 "destinationPort" = "Puerto de Destino"
 "targetAddress" = "Dirección de Destino"
 "monitorDesc" = "Dejar en blanco por defecto"
-"meansNoLimit" = "Significa Sin Límite"
+"meansNoLimit" = " = illimitata. (unidad: GB)"
 "totalFlow" = "Flujo Total"
 "leaveBlankToNeverExpire" = "Dejar en Blanco para Nunca Expirar"
 "noRecommendKeepDefault" = "No hay requisitos especiales para mantener la configuración predeterminada"
@@ -178,7 +178,7 @@
 "info" = "Info"
 "same" = "misma"
 "inboundData" = "Datos de entrada"
-"copyToClipboard" = "Copiar al portapapeles"
+"exportInbound" = "Exportación entrante"
 "import" = "Importar"
 "importInbound" = "Importar un entrante"
 
@@ -195,27 +195,28 @@
 "prefix" = "Prefijo"
 "postfix" = "Sufijo"
 "delayedStart" = "Iniciar después del primer uso"
-"expireDays" = "Días de Expiración"
+"expireDays" = "Duratio"
 "days" = "día(s)"
 "renew" = "Renovación automática"
-"renewDesc" = "Renovación automática días después del vencimiento. 0 = deshabilitar"
+"renewDesc" = "Auto-renovatio post tutelam receptam. (0 = disable) (unitas: dies)"
 
 [pages.inbounds.toasts]
 "obtain" = "Recibir"
 
 [pages.inbounds.stream.general]
-"requestHeader" = "Encabezado de la Petición"
+"request" = "Pedido"
+"response" = "Respuesta"
 "name" = "Nombre"
 "value" = "Valor"
 
 [pages.inbounds.stream.tcp]
-"requestVersion" = "Versión de la Petición"
-"requestMethod" = "Método de la Petición"
-"requestPath" = "Ruta de la Petición"
-"responseVersion" = "Versión de la Respuesta"
-"responseStatus" = "Estado de la Respuesta"
-"responseStatusDescription" = "Descripción del Estado de la Respuesta"
-"responseHeader" = "Encabezado de la Respuesta"
+"version" = "Versión"
+"method" = "Método"
+"path" = "Camino"
+"status" = "Estado"
+"statusDescription" = "Descripción de la Situación"
+"requestHeader" = "Encabezado de solicitud"
+"responseHeader" = "Encabezado de respuesta"
 
 [pages.inbounds.stream.quic]
 "encryption" = "Cifrado"
@@ -247,6 +248,7 @@
 "pageSizeDesc" = "Defina el tamaño de página para la tabla de entradas. Establezca 0 para desactivar"
 "remarkModel" = "Modelo de observación y carácter de separación"
 "datepicker" = "selector de fechas"
+"datepickerPlaceholder" = "Seleccionar fecha"
 "datepickerDescription" = "El tipo de calendario selector especifica la fecha de vencimiento"
 "sampleRemark" = "Observación de muestra"
 "oldUsername" = "Nombre de Usuario Actual"
@@ -419,6 +421,14 @@
 "bridge" = "puente"
 "portal" = "portal"
 "intercon" = "Interconexión"
+
+[pages.xray.wireguard]
+"secretKey" = "Llave secreta"
+"publicKey" = "Llave pública"
+"allowedIPs" = "IP permitidas"
+"endpoint" = "Punto final"
+"psk" = "Clave precompartida"
+"domainStrategy" = "Estrategia de dominio"
 
 [pages.settings.security]
 "admin" = "Administrador"
