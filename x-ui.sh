@@ -38,17 +38,27 @@ echo "The OS release is: $release"
 os_version=""
 os_version=$(grep -i version_id /etc/os-release | cut -d \" -f2 | cut -d . -f1)
 
-if [[ "${release}" == "centos" ]]; then
+if [[ "${release}" == "arch" ]]; then
+    echo "Your OS is Arch Linux"
+elif [[ "${release}" == "parch" ]]; then
+    echo "Your OS is Parch linux"
+elif [[ "${release}" == "manjaro" ]]; then
+    echo "Your OS is Manjaro"
+elif [[ "${release}" == "armbian" ]]; then
+    echo "Your OS is Armbian"
+elif [[ "${release}" == "opensuse-tumbleweed" ]]; then
+    echo "Your OS is OpenSUSE Tumbleweed"
+elif [[ "${release}" == "centos" ]]; then
     if [[ ${os_version} -lt 8 ]]; then
         echo -e "${red} Please use CentOS 8 or higher ${plain}\n" && exit 1
     fi
 elif [[ "${release}" == "ubuntu" ]]; then
     if [[ ${os_version} -lt 20 ]]; then
-        echo -e "${red}please use Ubuntu 20 or higher version! ${plain}\n" && exit 1
+        echo -e "${red} Please use Ubuntu 20 or higher version!${plain}\n" && exit 1
     fi
 elif [[ "${release}" == "fedora" ]]; then
     if [[ ${os_version} -lt 36 ]]; then
-        echo -e "${red}please use Fedora 36 or higher version! ${plain}\n" && exit 1
+        echo -e "${red} Please use Fedora 36 or higher version!${plain}\n" && exit 1
     fi
 elif [[ "${release}" == "debian" ]]; then
     if [[ ${os_version} -lt 11 ]]; then
@@ -56,18 +66,33 @@ elif [[ "${release}" == "debian" ]]; then
     fi
 elif [[ "${release}" == "almalinux" ]]; then
     if [[ ${os_version} -lt 9 ]]; then
-        echo -e "${red} Please use Almalinux 9 or higher ${plain}\n" && exit 1
+        echo -e "${red} Please use AlmaLinux 9 or higher ${plain}\n" && exit 1
     fi
 elif [[ "${release}" == "rocky" ]]; then
     if [[ ${os_version} -lt 9 ]]; then
-        echo -e "${red} Please use Rockylinux 9 or higher ${plain}\n" && exit 1
+        echo -e "${red} Please use Rocky Linux 9 or higher ${plain}\n" && exit 1
     fi
-elif [[ "${release}" == "arch" ]]; then
-    echo "Your OS is ArchLinux"
-elif [[ "${release}" == "manjaro" ]]; then
-    echo "Your OS is Manjaro"
-elif [[ "${release}" == "armbian" ]]; then
-    echo "Your OS is Armbian"
+elif [[ "${release}" == "oracle" ]]; then
+    if [[ ${os_version} -lt 8 ]]; then
+        echo -e "${red} Please use Oracle Linux 8 or higher ${plain}\n" && exit 1
+    fi
+else
+    echo -e "${red}Your operating system is not supported by this script.${plain}\n"
+    echo "Please ensure you are using one of the following supported operating systems:"
+    echo "- Ubuntu 20.04+"
+    echo "- Debian 11+"
+    echo "- CentOS 8+"
+    echo "- Fedora 36+"
+    echo "- Arch Linux"
+    echo "- Parch Linux"
+    echo "- Manjaro"
+    echo "- Armbian"
+    echo "- AlmaLinux 9+"
+    echo "- Rocky Linux 9+"
+    echo "- Oracle Linux 8+"
+    echo "- OpenSUSE Tumbleweed"
+    exit 1
+
 fi
 
 # Declare Variables
@@ -345,6 +370,47 @@ show_banlog() {
     fi
 }
 
+bbr_menu() {
+    echo -e "${green}\t1.${plain} Enable BBR"
+    echo -e "${green}\t2.${plain} Disable BBR"
+    echo -e "${green}\t0.${plain} Back to Main Menu"
+    read -p "Choose an option: " choice
+    case "$choice" in
+    0)
+        show_menu
+        ;;
+    1)
+        enable_bbr
+        ;;
+    2)
+        disable_bbr
+        ;;
+    *) echo "Invalid choice" ;;
+    esac
+}
+
+disable_bbr() {
+
+    if ! grep -q "net.core.default_qdisc=fq" /etc/sysctl.conf || ! grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
+        echo -e "${yellow}BBR is not currently enabled.${plain}"
+        exit 0
+    fi
+
+    # Replace BBR with CUBIC configurations
+    sed -i 's/net.core.default_qdisc=fq/net.core.default_qdisc=pfifo_fast/' /etc/sysctl.conf
+    sed -i 's/net.ipv4.tcp_congestion_control=bbr/net.ipv4.tcp_congestion_control=cubic/' /etc/sysctl.conf
+
+    # Apply changes
+    sysctl -p
+
+    # Verify that BBR is replaced with CUBIC
+    if [[ $(sysctl net.ipv4.tcp_congestion_control | awk '{print $3}') == "cubic" ]]; then
+        echo -e "${green}BBR has been replaced with CUBIC successfully.${plain}"
+    else
+        echo -e "${red}Failed to replace BBR with CUBIC. Please check your system configuration.${plain}"
+    fi
+}
+
 enable_bbr() {
     if grep -q "net.core.default_qdisc=fq" /etc/sysctl.conf && grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf; then
         echo -e "${green}BBR is already enabled!${plain}"
@@ -353,14 +419,17 @@ enable_bbr() {
 
     # Check the OS and install necessary packages
     case "${release}" in
-    ubuntu | debian)
+    ubuntu | debian | armbian)
         apt-get update && apt-get install -yqq --no-install-recommends ca-certificates
         ;;
-    centos | almalinux | rocky)
+    centos | almalinux | rocky | oracle)
         yum -y update && yum -y install ca-certificates
         ;;
     fedora)
         dnf -y update && dnf -y install ca-certificates
+        ;;
+    arch | manjaro | parch)
+        pacman -Sy --noconfirm ca-certificates
         ;;
     *)
         echo -e "${red}Unsupported operating system. Please check the script and install the necessary packages manually.${plain}\n"
@@ -528,8 +597,9 @@ open_ports() {
 
     # Check if the firewall is inactive
     if ufw status | grep -q "Status: active"; then
-        echo "firewall is already active"
+        echo "Firewall is already active"
     else
+        echo "Activating firewall..."
         # Open the necessary ports
         ufw allow ssh
         ufw allow http
@@ -556,17 +626,19 @@ open_ports() {
             # Split the range into start and end ports
             start_port=$(echo $port | cut -d'-' -f1)
             end_port=$(echo $port | cut -d'-' -f2)
-            # Loop through the range and open each port
-            for ((i = start_port; i <= end_port; i++)); do
-                ufw allow $i
-            done
+            ufw allow $start_port:$end_port/tcp
+            ufw allow $start_port:$end_port/udp
         else
             ufw allow "$port"
         fi
     done
 
     # Confirm that the ports are open
-    ufw status | grep $ports
+    echo "The following ports are now open:"
+    ufw status | grep "ALLOW" | grep -Eo "[0-9]+(/[a-z]+)?"
+
+    echo "Firewall status:"
+    ufw status verbose
 }
 
 delete_ports() {
@@ -586,18 +658,28 @@ delete_ports() {
             # Split the range into start and end ports
             start_port=$(echo $port | cut -d'-' -f1)
             end_port=$(echo $port | cut -d'-' -f2)
-            # Loop through the range and delete each port
-            for ((i = start_port; i <= end_port; i++)); do
-                ufw delete allow $i
-            done
+            # Delete the port range
+            ufw delete allow $start_port:$end_port/tcp
+            ufw delete allow $start_port:$end_port/udp
         else
             ufw delete allow "$port"
         fi
     done
 
     # Confirm that the ports are deleted
+    
     echo "Deleted the specified ports:"
-    ufw status | grep $ports
+    for port in "${PORT_LIST[@]}"; do
+        if [[ $port == *-* ]]; then
+            start_port=$(echo $port | cut -d'-' -f1)
+            end_port=$(echo $port | cut -d'-' -f2)
+            # Check if the port range has been successfully deleted
+            (ufw status | grep -q "$start_port:$end_port") || echo "$start_port-$end_port"
+        else
+            # Check if the individual port has been successfully deleted
+            (ufw status | grep -q "$port") || echo "$port"
+        fi
+    done
 }
 
 update_geo() {
@@ -680,11 +762,14 @@ ssl_cert_issue() {
     ubuntu | debian | armbian)
         apt update && apt install socat -y
         ;;
-    centos | almalinux | rocky)
+    centos | almalinux | rocky | oracle)
         yum -y update && yum -y install socat
         ;;
     fedora)
         dnf -y update && dnf -y install socat
+        ;;
+    arch | manjaro | parch)
+        pacman -Sy --noconfirm socat
         ;;
     *)
         echo -e "${red}Unsupported operating system. Please check the script and install the necessary packages manually.${plain}\n"
@@ -733,7 +818,7 @@ ssl_cert_issue() {
     # NOTE:This should be handled by user
     # open the port and kill the occupied progress
     ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-    ~/.acme.sh/acme.sh --issue -d ${domain} --standalone --httpport ${WebPort}
+    ~/.acme.sh/acme.sh --issue -d ${domain} --listen-v6 --standalone --httpport ${WebPort}
     if [ $? -ne 0 ]; then
         LOGE "issue certs failed,please check logs"
         rm -rf ~/.acme.sh/${domain}
@@ -906,20 +991,26 @@ run_speedtest() {
 }
 
 create_iplimit_jails() {
-    # Use default bantime if not passed => 30 minutes
-    local bantime="${1:-30}"
+    # Use default bantime if not passed => 15 minutes
+    local bantime="${1:-15}"
 
     # Uncomment 'allowipv6 = auto' in fail2ban.conf
     sed -i 's/#allowipv6 = auto/allowipv6 = auto/g' /etc/fail2ban/fail2ban.conf
 
+    #On Debian 12+ fail2ban's default backend should be changed to systemd
+    if [[  "${release}" == "debian" && ${os_version} -ge 12 ]]; then
+        sed -i '0,/action =/s/backend = auto/backend = systemd/' /etc/fail2ban/jail.conf
+    fi
+
     cat << EOF > /etc/fail2ban/jail.d/3x-ipl.conf
 [3x-ipl]
 enabled=true
+backend=auto
 filter=3x-ipl
 action=3x-ipl
 logpath=${iplimit_log_path}
-maxretry=4
-findtime=60
+maxretry=2
+findtime=32
 bantime=${bantime}m
 EOF
 
@@ -932,7 +1023,7 @@ EOF
 
     cat << EOF > /etc/fail2ban/action.d/3x-ipl.conf
 [INCLUDES]
-before = iptables-common.conf
+before = iptables-allports.conf
 
 [Definition]
 actionstart = <iptables> -N f2b-<name>
@@ -977,8 +1068,9 @@ iplimit_main() {
     echo -e "${green}\t2.${plain} Change Ban Duration"
     echo -e "${green}\t3.${plain} Unban Everyone"
     echo -e "${green}\t4.${plain} Check Logs"
-    echo -e "${green}\t5.${plain} fail2ban status"
-    echo -e "${green}\t6.${plain} Uninstall IP Limit"
+    echo -e "${green}\t5.${plain} Fail2ban Status"
+    echo -e "${green}\t6.${plain} Restart Fail2ban"
+    echo -e "${green}\t7.${plain} Uninstall IP Limit"
     echo -e "${green}\t0.${plain} Back to Main Menu"
     read -p "Choose an option: " choice
     case "$choice" in
@@ -1021,8 +1113,10 @@ iplimit_main() {
     5)
         service fail2ban status
         ;;
-
     6)
+        systemctl restart fail2ban
+        ;;
+    7)
         remove_iplimit
         ;;
     *) echo "Invalid choice" ;;
@@ -1035,15 +1129,25 @@ install_iplimit() {
 
         # Check the OS and install necessary packages
         case "${release}" in
-        ubuntu | debian)
+        ubuntu)
+            if [[ "${os_version}" -ge 24 ]]; then
+                apt update && apt install python3-pip -y
+                python3 -m pip install pyasynchat --break-system-packages
+            fi
             apt update && apt install fail2ban -y
             ;;
-        centos | almalinux | rocky)
+        debian | armbian)
+            apt update && apt install fail2ban -y
+            ;;
+        centos | almalinux | rocky | oracle)
             yum update -y && yum install epel-release -y
             yum -y install fail2ban
             ;;
         fedora)
             dnf -y update && dnf -y install fail2ban
+            ;;
+        arch | manjaro | parch)
+            pacman -Syu --noconfirm fail2ban
             ;;
         *)
             echo -e "${red}Unsupported operating system. Please check the script and install the necessary packages manually.${plain}\n"
@@ -1111,18 +1215,21 @@ remove_iplimit() {
         rm -rf /etc/fail2ban
         systemctl stop fail2ban
         case "${release}" in
-        ubuntu | debian)
+        ubuntu | debian | armbian)
             apt-get remove -y fail2ban
             apt-get purge -y fail2ban -y
             apt-get autoremove -y
             ;;
-        centos | almalinux | rocky)
+        centos | almalinux | rocky | oracle)
             yum remove fail2ban -y
             yum autoremove -y
             ;;
         fedora)
             dnf remove fail2ban -y
             dnf autoremove -y
+            ;;
+        arch | manjaro | parch)
+            pacman -Rns --noconfirm fail2ban
             ;;
         *)
             echo -e "${red}Unsupported operating system. Please uninstall Fail2ban manually.${plain}\n"
@@ -1263,7 +1370,7 @@ show_menu() {
         firewall_menu
         ;;
     21)
-        enable_bbr
+        bbr_menu
         ;;
     22)
         update_geo

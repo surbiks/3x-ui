@@ -1,5 +1,9 @@
 # 3X-UI
 
+[English](/README.md) | [Chinese](/README.zh.md) | [Español](/README.es_ES.md)
+
+<p align="center"><a href="#"><img src="./media/3X-UI.png" alt="Image"></a></p>
+
 **An Advanced Web Panel • Built on Xray Core**
 
 [![](https://img.shields.io/github/v/release/mhsanaei/3x-ui.svg)](https://github.com/MHSanaei/3x-ui/releases)
@@ -12,8 +16,7 @@
 
 **If this project is helpful to you, you may wish to give it a**:star2:
 
-<a href="#">
-  <img width="125" alt="image" src="https://github.com/MHSanaei/3x-ui/assets/115543613/7aa895dd-048a-42e7-989b-afd41a74e2e1.jpg"></a>
+<p align="left"><a href="#"><img width="125" src="https://github.com/MHSanaei/3x-ui/assets/115543613/7aa895dd-048a-42e7-989b-afd41a74e2e1" alt="Image"></a></p>
 
 - USDT (TRC20): `TXncxkvhkDWGts487Pjqq1qT9JmwRUz8CC`
 
@@ -25,10 +28,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.
 
 ## Install Custom Version
 
-To install your desired version, add the version to the end of the installation command. e.g., ver `v2.1.3`:
+To install your desired version, add the version to the end of the installation command. e.g., ver `v2.3.6`:
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.1.3
+bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.3.6
 ```
 
 ## SSL Certificate
@@ -44,8 +47,20 @@ The Management script has a built-in SSL certificate application for Cloudflare.
 - Cloudflare Global API Key
 - The domain name has been resolved to the current server through cloudflare
 
-**1:** Run the`x-ui`command on the terminal, then choose `Cloudflare SSL Certificate`.
+How to get the Cloudflare Global API Key:
 
+1. Run the`x-ui`command on the terminal, then choose `Cloudflare SSL Certificate`.
+
+2. Visit the link https://dash.cloudflare.com/profile/api-tokens
+
+3. Click on View Global API Key (See the screenshot below)
+        ![](media/APIKey1.PNG)
+
+4. You may have to re-authenticate your account. After that, the API Key will be shown (See the screenshot below)\
+        ![](media/APIKey2.png)
+
+When using, just enter `domain name`, `email`, `API KEY`, the diagram is as follows:
+        ![](media/DetailEnter.png)
 
 ### Certbot
 ```
@@ -76,6 +91,7 @@ case "${ARCH}" in
   armv7* | armv7) XUI_ARCH="armv7" ;;
   armv6* | armv6) XUI_ARCH="armv6" ;;
   armv5* | armv5) XUI_ARCH="armv5" ;;
+  s390x) echo 's390x' ;;
   *) XUI_ARCH="amd64" ;;
 esac
 
@@ -94,6 +110,7 @@ case "${ARCH}" in
   armv7* | armv7) XUI_ARCH="armv7" ;;
   armv6* | armv6) XUI_ARCH="armv6" ;;
   armv5* | armv5) XUI_ARCH="armv5" ;;
+  s390x) echo 's390x' ;;
   *) XUI_ARCH="amd64" ;;
 esac
 
@@ -178,10 +195,13 @@ remove 3x-ui from docker
 - CentOS 8+
 - Fedora 36+
 - Arch Linux
+- Parch Linux
 - Manjaro
 - Armbian
 - AlmaLinux 9+
-- Rockylinux 9+
+- Rocky Linux 9+
+- Oracle Linux 8+
+- OpenSUSE Tubleweed
 
 ## Supported Architectures and Devices
 
@@ -201,6 +221,8 @@ Our platform offers compatibility with a diverse range of architectures and devi
 - **armv6 / arm / arm32**: Geared towards very old embedded devices, this architecture, while less prevalent, is still in use. Devices such as Raspberry Pi 1, Raspberry Pi Zero/Zero W, rely on this architecture.
 
 - **armv5 / arm / arm32**: An older architecture primarily associated with early embedded systems, it is less common today but may still be found in legacy devices like early Raspberry Pi versions and some older smartphones.
+
+- **s390x**: This architecture is commonly used in IBM mainframe computers and offers high performance and reliability for enterprise workloads.
 </details>
 
 ## Languages
@@ -212,6 +234,7 @@ Our platform offers compatibility with a diverse range of architectures and devi
 - Vietnamese
 - Spanish
 - Indonesian 
+- Ukrainian
 
 
 ## Features
@@ -253,7 +276,7 @@ Our platform offers compatibility with a diverse range of architectures and devi
  
 </details>
 
-## [WARP Configuration](https://gitlab.com/fscarmen/warp)
+## WARP Configuration
 
 <details>
   <summary>Click for WARP configuration details</summary>
@@ -309,9 +332,9 @@ If you want to use routing to WARP before v2.1.0 follow steps as below:
   
   ```sh
     "log": {
-    "access": "./access.log",
-    "dnsLog": false,
-    "loglevel": "warning"
+      "access": "./access.log",
+      "dnsLog": false,
+      "loglevel": "warning"
     },
   ```
 
@@ -410,7 +433,7 @@ Enter the user ID in input field number 4. The Telegram accounts with this id wi
 | `POST` | `"/resetAllTraffics"`              | Reset traffics of all inbounds              |
 | `POST` | `"/resetAllClientTraffics/:id"`    | Reset traffics of all clients in an inbound |
 | `POST` | `"/delDepletedClients/:id"`        | Delete inbound depleted clients (-1: all)   |
-| `POST` | `"/onlines"`                       | Get Online users ( list of emails )       |
+| `POST` | `"/onlines"`                       | Get Online users ( list of emails )         |
 
 \*- The field `clientId` should be filled by:
 

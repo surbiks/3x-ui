@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	_ "unsafe"
+
 	"x-ui/config"
 	"x-ui/database"
 	"x-ui/logger"
@@ -124,22 +125,35 @@ func showSetting(show bool) {
 		settingService := service.SettingService{}
 		port, err := settingService.GetPort()
 		if err != nil {
-			fmt.Println("get current port failed,error info:", err)
+			fmt.Println("get current port failed, error info:", err)
 		}
+
+		webBasePath, err := settingService.GetBasePath()
+		if err != nil {
+			fmt.Println("get webBasePath failed, error info:", err)
+		}
+
 		userService := service.UserService{}
 		userModel, err := userService.GetFirstUser()
 		if err != nil {
-			fmt.Println("get current user info failed,error info:", err)
+			fmt.Println("get current user info failed, error info:", err)
 		}
+
 		username := userModel.Username
 		userpasswd := userModel.Password
-		if (username == "") || (userpasswd == "") {
+		if username == "" || userpasswd == "" {
 			fmt.Println("current username or password is empty")
 		}
+
 		fmt.Println("current panel settings as follows:")
 		fmt.Println("username:", username)
-		fmt.Println("userpasswd:", userpasswd)
+		fmt.Println("password:", userpasswd)
 		fmt.Println("port:", port)
+		if webBasePath != "" {
+			fmt.Println("webBasePath:", webBasePath)
+		} else {
+			fmt.Println("webBasePath is not set")
+		}
 	}
 }
 
@@ -202,7 +216,7 @@ func updateTgbotSetting(tgBotToken string, tgBotChatid string, tgBotRuntime stri
 	}
 }
 
-func updateSetting(port int, username string, password string) {
+func updateSetting(port int, username string, password string, webBasePath string) {
 	err := database.InitDB(config.GetDBPath())
 	if err != nil {
 		fmt.Println(err)
@@ -219,6 +233,7 @@ func updateSetting(port int, username string, password string) {
 			fmt.Printf("set port %v success", port)
 		}
 	}
+
 	if username != "" || password != "" {
 		userService := service.UserService{}
 		err := userService.UpdateFirstUser(username, password)
@@ -227,6 +242,42 @@ func updateSetting(port int, username string, password string) {
 		} else {
 			fmt.Println("set username and password success")
 		}
+	}
+
+	if webBasePath != "" {
+		err := settingService.SetBasePath(webBasePath)
+		if err != nil {
+			fmt.Println("set base URI path failed:", err)
+		} else {
+			fmt.Println("set base URI path success")
+		}
+	}
+}
+
+func updateCert(publicKey string, privateKey string) {
+	err := database.InitDB(config.GetDBPath())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if (privateKey != "" && publicKey != "") || (privateKey == "" && publicKey == "") {
+		settingService := service.SettingService{}
+		err = settingService.SetCertFile(publicKey)
+		if err != nil {
+			fmt.Println("set certificate public key failed:", err)
+		} else {
+			fmt.Println("set certificate public key success")
+		}
+
+		err = settingService.SetKeyFile(privateKey)
+		if err != nil {
+			fmt.Println("set certificate private key failed:", err)
+		} else {
+			fmt.Println("set certificate private key success")
+		}
+	} else {
+		fmt.Println("both public and private key should be entered.")
 	}
 }
 
@@ -243,21 +294,33 @@ func migrateDb() {
 }
 
 func removeSecret() {
-	err := database.InitDB(config.GetDBPath())
+	userService := service.UserService{}
+
+	secretExists, err := userService.CheckSecretExistence()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error checking secret existence:", err)
 		return
 	}
-	userService := service.UserService{}
+
+	if !secretExists {
+		fmt.Println("No secret exists to remove.")
+		return
+	}
+
 	err = userService.RemoveUserSecret()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error removing secret:", err)
+		return
 	}
+
 	settingService := service.SettingService{}
 	err = settingService.SetSecretStatus(false)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error updating secret status:", err)
+		return
 	}
+
+	fmt.Println("Secret removed successfully.")
 }
 
 func main() {
@@ -275,6 +338,9 @@ func main() {
 	var port int
 	var username string
 	var password string
+	var webBasePath string
+	var webCertFile string
+	var webKeyFile string
 	var tgbottoken string
 	var tgbotchatid string
 	var enabletgbot bool
@@ -284,9 +350,13 @@ func main() {
 	var remove_secret bool
 	settingCmd.BoolVar(&reset, "reset", false, "reset all settings")
 	settingCmd.BoolVar(&show, "show", false, "show current settings")
+	settingCmd.BoolVar(&remove_secret, "remove_secret", false, "remove secret")
 	settingCmd.IntVar(&port, "port", 0, "set panel port")
 	settingCmd.StringVar(&username, "username", "", "set login username")
 	settingCmd.StringVar(&password, "password", "", "set login password")
+	settingCmd.StringVar(&webBasePath, "webBasePath", "", "set web base path")
+	settingCmd.StringVar(&webCertFile, "webCert", "", "set web public key path")
+	settingCmd.StringVar(&webKeyFile, "webCertKey", "", "set web private key path")
 	settingCmd.StringVar(&tgbottoken, "tgbottoken", "", "set telegram bot token")
 	settingCmd.StringVar(&tgbotRuntime, "tgbotRuntime", "", "set telegram bot cron time")
 	settingCmd.StringVar(&tgbotchatid, "tgbotchatid", "", "set telegram bot chat id")
@@ -327,7 +397,7 @@ func main() {
 		if reset {
 			resetSetting()
 		} else {
-			updateSetting(port, username, password)
+			updateSetting(port, username, password, webBasePath)
 		}
 		if show {
 			showSetting(show)
@@ -341,8 +411,20 @@ func main() {
 		if enabletgbot {
 			updateTgbotEnableSts(enabletgbot)
 		}
+	case "cert":
+		err := settingCmd.Parse(os.Args[2:])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		if reset {
+			updateCert("", "")
+		} else {
+			updateCert(webCertFile, webKeyFile)
+		}
+
 	default:
-		fmt.Println("except 'run' or 'setting' subcommands")
+		fmt.Println("Invalid subcommands")
 		fmt.Println()
 		runCmd.Usage()
 		fmt.Println()

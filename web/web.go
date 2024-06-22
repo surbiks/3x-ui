@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"x-ui/config"
 	"x-ui/logger"
 	"x-ui/util/common"
@@ -23,9 +24,9 @@ import (
 	"x-ui/web/network"
 	"x-ui/web/service"
 
-	sessions "github.com/Calidity/gin-sessions"
-	"github.com/Calidity/gin-sessions/cookie"
 	"github.com/gin-contrib/gzip"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 )
@@ -295,7 +296,7 @@ func (s *Server) startTask() {
 }
 
 func (s *Server) Start() (err error) {
-	//This is an anonymous function, no function name
+	// This is an anonymous function, no function name
 	defer func() {
 		if err != nil {
 			s.Stop()
@@ -337,25 +338,21 @@ func (s *Server) Start() (err error) {
 	}
 	if certFile != "" || keyFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			listener.Close()
-			return err
+		if err == nil {
+			c := &tls.Config{
+				Certificates: []tls.Certificate{cert},
+			}
+			listener = network.NewAutoHttpsListener(listener)
+			listener = tls.NewListener(listener, c)
+			logger.Info("web server run https on", listener.Addr())
+		} else {
+			logger.Error("error in loading certificates: ", err)
+			logger.Info("web server run http on", listener.Addr())
 		}
-		c := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-		}
-		listener = network.NewAutoHttpsListener(listener)
-		listener = tls.NewListener(listener, c)
-	}
-
-	if certFile != "" || keyFile != "" {
-		logger.Info("web server run https on", listener.Addr())
 	} else {
 		logger.Info("web server run http on", listener.Addr())
 	}
 	s.listener = listener
-
-	s.startTask()
 
 	s.httpServer = &http.Server{
 		Handler: engine,
@@ -364,6 +361,8 @@ func (s *Server) Start() (err error) {
 	go func() {
 		s.httpServer.Serve(listener)
 	}()
+
+	s.startTask()
 
 	isTgbotenabled, err := s.settingService.GetTgbotenabled()
 	if (err == nil) && (isTgbotenabled) {
